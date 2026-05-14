@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+
+{% block page_title %}{{ project.name }}{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
+    <div>
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+            <div style="width: 16px; height: 16px; border-radius: 4px; background-color: {{ project.color }};"></div>
+            <h1 style="font-size: 1.875rem; font-weight: 700;">{{ project.name }}</h1>
+        </div>
+        <p style="color: var(--text-secondary); max-width: 600px;">{{ project.description }}</p>
+    </div>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+        <div style="display: flex; margin-right: 1rem;">
+            {% for member in project.members.all|slice:":3" %}
+            <div class="avatar-small" style="border: 2px solid white; margin-left: -8px; background: #6b7280; z-index: {{ forloop.revcounter }};" title="{{ member.user.get_full_name }}">
+                {{ member.user.first_name|make_list|first|default:member.user.username|make_list|first|upper }}
+            </div>
+            {% endfor %}
+            <button class="btn-icon" style="margin-left: 0.5rem;"><i data-lucide="user-plus"></i></button>
+        </div>
+        <button class="btn-primary" onclick="openModal('createTaskModal')">
+            <i data-lucide="plus"></i> New Task
+        </button>
+    </div>
+</div>
+
+<div style="display: flex; gap: 1.5rem; overflow-x: auto; padding-bottom: 2rem;">
+    <!-- Column: To Do -->
+    <div style="flex: 0 0 320px; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border-color); padding: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--border-color);">
+            <h3 style="font-size: 0.875rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                <i data-lucide="list-todo" style="width: 16px; color: var(--text-secondary);"></i> To Do
+            </h3>
+            <span class="badge" style="background: #f3f4f6; color: var(--text-secondary);">{{ project.tasks.all|dictsort:"status"|length }}</span>
+        </div>
+        <div class="task-list">
+            {% for task in project.tasks.all %}
+                {% if task.status == 'todo' %}
+                <div class="card" style="padding: 1rem; box-shadow: var(--shadow-sm); margin-bottom: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span class="badge badge-{{ task.priority }}">{{ task.priority|upper }}</span>
+                        {% if task.assignee %}
+                        <div class="avatar-small" style="width: 24px; height: 24px; font-size: 0.75rem;" title="{{ task.assignee.get_full_name }}">{{ task.assignee.first_name|make_list|first|default:task.assignee.username|make_list|first|upper }}</div>
+                        {% else %}
+                        <div class="avatar-small" style="width: 24px; height: 24px; font-size: 0.75rem; background: #9ca3af;" title="Unassigned"><i data-lucide="user" style="width: 12px;"></i></div>
+                        {% endif %}
+                    </div>
+                    <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.25rem;">{{ task.title }}</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.5rem;">{{ task.description|truncatewords:10 }}</p>
+                    <div style="font-size: 0.75rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.25rem;">
+                        <i data-lucide="calendar" style="width: 12px;"></i> {{ task.due_date|default:"No date" }}
+                    </div>
+                    <div style="margin-top: 0.75rem; display: flex; gap: 0.25rem; border-top: 1px solid var(--border-color); padding-top: 0.5rem;">
+                        <form action="{% url 'task_update_status' task.id %}" method="POST" style="margin:0;">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="in-progress">
+                            <button type="submit" style="font-size: 0.7rem; color: var(--primary); font-weight: 500;">Move to Progress</button>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+            <button style="width: 100%; padding: 0.75rem; border: 1px dashed var(--border-color); border-radius: var(--radius-md); color: var(--text-secondary); font-size: 0.875rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                <i data-lucide="plus" style="width: 16px;"></i> Add Task
+            </button>
+        </div>
+    </div>
+    
+    <!-- Column: In Progress -->
+    <div style="flex: 0 0 320px; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border-color); padding: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #3b82f6;">
+            <h3 style="font-size: 0.875rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                <i data-lucide="clock" style="width: 16px; color: #3b82f6;"></i> In Progress
+            </h3>
+        </div>
+        <div class="task-list">
+            {% for task in project.tasks.all %}
+                {% if task.status == 'in-progress' %}
+                <div class="card" style="padding: 1rem; box-shadow: var(--shadow-sm); margin-bottom: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span class="badge badge-{{ task.priority }}">{{ task.priority|upper }}</span>
+                        {% if task.assignee %}
+                        <div class="avatar-small" style="width: 24px; height: 24px; font-size: 0.75rem;" title="{{ task.assignee.get_full_name }}">{{ task.assignee.first_name|make_list|first|default:task.assignee.username|make_list|first|upper }}</div>
+                        {% else %}
+                        <div class="avatar-small" style="width: 24px; height: 24px; font-size: 0.75rem; background: #9ca3af;" title="Unassigned"><i data-lucide="user" style="width: 12px;"></i></div>
+                        {% endif %}
+                    </div>
+                    <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.25rem;">{{ task.title }}</h4>
+                    <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 0.5rem;">
+                        <form action="{% url 'task_update_status' task.id %}" method="POST" style="margin:0;">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="todo">
+                            <button type="submit" style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 500;">To Do</button>
+                        </form>
+                        <form action="{% url 'task_update_status' task.id %}" method="POST" style="margin:0;">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="in-review">
+                            <button type="submit" style="font-size: 0.7rem; color: #8b5cf6; font-weight: 500;">Move to Review</button>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Column: In Review -->
+    <div style="flex: 0 0 320px; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border-color); padding: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #8b5cf6;">
+            <h3 style="font-size: 0.875rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                <i data-lucide="eye" style="width: 16px; color: #8b5cf6;"></i> In Review
+            </h3>
+        </div>
+        <div class="task-list">
+            {% for task in project.tasks.all %}
+                {% if task.status == 'in-review' %}
+                <div class="card" style="padding: 1rem; box-shadow: var(--shadow-sm); margin-bottom: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span class="badge badge-{{ task.priority }}">{{ task.priority|upper }}</span>
+                        {% if task.assignee %}
+                        <div class="avatar-small" style="width: 24px; height: 24px; font-size: 0.75rem;" title="{{ task.assignee.get_full_name }}">{{ task.assignee.first_name|make_list|first|default:task.assignee.username|make_list|first|upper }}</div>
+                        {% else %}
+                        <div class="avatar-small" style="width: 24px; height: 24px; font-size: 0.75rem; background: #9ca3af;" title="Unassigned"><i data-lucide="user" style="width: 12px;"></i></div>
+                        {% endif %}
+                    </div>
+                    <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.25rem;">{{ task.title }}</h4>
+                    <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 0.5rem;">
+                        <form action="{% url 'task_update_status' task.id %}" method="POST" style="margin:0;">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="in-progress">
+                            <button type="submit" style="font-size: 0.7rem; color: #3b82f6; font-weight: 500;">Back to Progress</button>
+                        </form>
+                        <form action="{% url 'task_update_status' task.id %}" method="POST" style="margin:0;">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="completed">
+                            <button type="submit" style="font-size: 0.7rem; color: #10b981; font-weight: 500;">Complete</button>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Column: Completed -->
+    <div style="flex: 0 0 320px; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border-color); padding: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #10b981;">
+            <h3 style="font-size: 0.875rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                <i data-lucide="check-circle" style="width: 16px; color: #10b981;"></i> Completed
+            </h3>
+        </div>
+        <div class="task-list">
+            {% for task in project.tasks.all %}
+                {% if task.status == 'completed' %}
+                <div class="card" style="padding: 1rem; box-shadow: var(--shadow-sm); margin-bottom: 0.75rem; opacity: 0.7;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span class="badge badge-{{ task.priority }}">{{ task.priority|upper }}</span>
+                        {% if task.assignee %}
+                        <div class="avatar-small" style="width: 24px; height: 24px; font-size: 0.75rem;" title="{{ task.assignee.get_full_name }}">{{ task.assignee.first_name|make_list|first|default:task.assignee.username|make_list|first|upper }}</div>
+                        {% else %}
+                        <div class="avatar-small" style="width: 24px; height: 24px; font-size: 0.75rem; background: #9ca3af;" title="Unassigned"><i data-lucide="user" style="width: 12px;"></i></div>
+                        {% endif %}
+                    </div>
+                    <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.25rem; text-decoration: line-through;">{{ task.title }}</h4>
+                    <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 0.5rem;">
+                        <form action="{% url 'task_update_status' task.id %}" method="POST" style="margin:0;">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="todo">
+                            <button type="submit" style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 500;">Re-open Task</button>
+                        </form>
+                        <form action="{% url 'task_delete' task.id %}" method="POST" style="margin:0; margin-left: auto;">
+                            {% csrf_token %}
+                            <button type="submit" style="font-size: 0.7rem; color: #ef4444; font-weight: 500;">Delete</button>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Create Task Modal -->
+<div id="createTaskModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>New Task</h3>
+            <button class="btn-close" onclick="closeModal('createTaskModal')"><i data-lucide="x"></i></button>
+        </div>
+        <form action="{% url 'task_create' project.id %}" method="POST">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Task Title</label>
+                    <input type="text" name="title" class="form-control" required placeholder="What needs to be done?">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" class="form-control" rows="3" placeholder="Add more details..."></textarea>
+                </div>
+                <div class="grid-2" style="margin-top: 0; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Priority</label>
+                        <select name="priority" class="form-control" required>
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select name="status" class="form-control" required>
+                            <option value="todo" selected>To Do</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="in-review">In Review</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeModal('createTaskModal')">Cancel</button>
+                <button type="submit" class="btn-primary">Create Task</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

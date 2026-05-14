@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Team Task Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="auth-layout">
+        <div class="auth-panel">
+            <h1 style="font-size: 3rem; margin-bottom: 1rem; font-weight: 700;">TTM</h1>
+            <p style="font-size: 1.25rem; opacity: 0.9; max-width: 400px; text-align: center;">Join thousands of teams already using TTM to stay organized.</p>
+        </div>
+        <div class="auth-form-container">
+            <div class="auth-form" style="max-width: 450px;">
+                <h2>Create an Account</h2>
+                <p>Sign up to get started with Team Task Manager.</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.errors %}
+                        <div style="padding: 1rem; background-color: #fee2e2; color: #dc2626; border-radius: 8px; margin-bottom: 1rem; font-size: 0.875rem;">
+                            Please correct the errors below.
+                        </div>
+                    {% endif %}
+
+                    {% for field in form %}
+                    <div class="form-group">
+                        <label>{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <div style="color: #dc2626; font-size: 0.75rem; margin-top: 0.25rem;">{{ field.errors|join:", " }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    
+                    <button type="submit" class="btn-primary btn-block" style="margin-top: 1rem;">Create Account</button>
+                </form>
+                
+                <p style="text-align: center; margin-top: 2rem; color: var(--text-secondary);">
+                    Already have an account? <a href="{% url 'login' %}" style="color: var(--primary); font-weight: 500;">Sign in</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Apply form-control class to all inputs
+        document.querySelectorAll('input').forEach(input => {
+            if (input.type !== 'checkbox' && input.type !== 'radio') {
+                input.classList.add('form-control');
+            }
+        });
+    </script>
+</body>
+</html>

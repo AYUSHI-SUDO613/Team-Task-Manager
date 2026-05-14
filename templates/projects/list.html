@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Projects{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
+    <div>
+        <h1 style="font-size: 1.875rem; font-weight: 700; margin-bottom: 0.5rem;">Projects</h1>
+        <p style="color: var(--text-secondary);">Manage and track your organization's initiatives</p>
+    </div>
+    <div style="display: flex; gap: 1rem;">
+        <div style="position: relative;">
+            <i data-lucide="search" style="position: absolute; left: 0.75rem; top: 0.6rem; color: var(--text-secondary); width: 18px;"></i>
+            <input type="text" placeholder="Search projects..." style="padding: 0.5rem 1rem 0.5rem 2.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 0.875rem; width: 250px;">
+        </div>
+        <button class="btn-primary" onclick="openModal('createProjectModal')">
+            <i data-lucide="plus"></i> New Project
+        </button>
+    </div>
+</div>
+
+<div class="grid-4">
+    {% for project in projects %}
+    <div class="card" style="border-top: 4px solid {{ project.color }}; position: relative; padding: 1.5rem;">
+        <button class="btn-icon" style="position: absolute; right: 1rem; top: 1rem;"><i data-lucide="more-vertical" style="width: 18px;"></i></button>
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+            <div class="project-icon" style="background-color: {{ project.color }}; width: 40px; height: 40px; font-size: 1rem;">
+                <i data-lucide="folder" style="width: 20px;"></i>
+            </div>
+            <div>
+                <h3 style="font-size: 1rem; font-weight: 600;">{{ project.name }}</h3>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.25rem;">
+                    <i data-lucide="users" style="width: 12px; height: 12px;"></i> {{ project.members.count }} MEMBERS
+                </p>
+            </div>
+        </div>
+        
+        <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 2rem; height: 40px; overflow: hidden;">
+            {{ project.description }}
+        </p>
+        
+        <div>
+            {% with done=project.tasks.all|dictsort:"status"|length total=project.tasks.all|length %}
+            {% if total > 0 %}
+                {% widthratio done total 100 as percentage %}
+            {% else %}
+                {% widthratio 0 1 100 as percentage %}
+            {% endif %}
+            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                <span>{{ done }}/{{ total }} TASKS COMPLETED</span>
+                <span style="color: {{ project.color }};">{{ percentage|default:"0" }}%</span>
+            </div>
+            <div class="progress-bg">
+                <div class="progress-fill" style="width: {{ percentage|default:'0' }}%; background-color: {{ project.color }};"></div>
+            </div>
+            {% endwith %}
+        </div>
+        
+        <a href="{% url 'project_board' project.id %}" style="position: absolute; inset: 0;"></a>
+    </div>
+    {% empty %}
+    <div style="grid-column: span 4; text-align: center; padding: 4rem; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px dashed var(--border-color);">
+        <div style="width: 48px; height: 48px; background: #f3f4f6; color: var(--text-secondary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+            <i data-lucide="folder-plus"></i>
+        </div>
+        <h3 style="font-weight: 600; margin-bottom: 0.5rem;">No projects yet</h3>
+        <p style="color: var(--text-secondary); font-size: 0.875rem;">Create a project to start collaborating with your team.</p>
+    </div>
+    {% endfor %}
+</div>
+<!-- Create Project Modal -->
+<div id="createProjectModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>New Project</h3>
+            <button class="btn-close" onclick="closeModal('createProjectModal')"><i data-lucide="x"></i></button>
+        </div>
+        <form action="{% url 'project_create' %}" method="POST">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Project Name</label>
+                    <input type="text" name="name" class="form-control" required placeholder="E.g., Website Redesign">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" class="form-control" rows="3" placeholder="What is this project about?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Color</label>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                        <label><input type="radio" name="color" value="#6366f1" checked> <div style="width: 24px; height: 24px; border-radius: 50%; background: #6366f1;"></div></label>
+                        <label><input type="radio" name="color" value="#8b5cf6"> <div style="width: 24px; height: 24px; border-radius: 50%; background: #8b5cf6;"></div></label>
+                        <label><input type="radio" name="color" value="#ec4899"> <div style="width: 24px; height: 24px; border-radius: 50%; background: #ec4899;"></div></label>
+                        <label><input type="radio" name="color" value="#10b981"> <div style="width: 24px; height: 24px; border-radius: 50%; background: #10b981;"></div></label>
+                        <label><input type="radio" name="color" value="#f59e0b"> <div style="width: 24px; height: 24px; border-radius: 50%; background: #f59e0b;"></div></label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeModal('createProjectModal')">Cancel</button>
+                <button type="submit" class="btn-primary">Create Project</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

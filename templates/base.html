@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TTM{% endblock %} - Team Task Manager</title>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    {% if user.is_authenticated %}
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <div class="brand-icon">
+                        <i data-lucide="layers"></i>
+                        <span class="pulse-dot"></span>
+                    </div>
+                    <div class="brand-text">
+                        <h1>TTM</h1>
+                        <p>Team Task Manager</p>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="{% url 'dashboard' %}" class="nav-item {% if request.path == '/' %}active{% endif %}">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{% url 'project_list' %}" class="nav-item {% if 'projects' in request.path %}active{% endif %}">
+                    <i data-lucide="folder-kanban"></i>
+                    <span>Projects</span>
+                </a>
+                <a href="{% url 'task_list' %}" class="nav-item {% if 'tasks' in request.path %}active{% endif %}">
+                    <i data-lucide="check-square"></i>
+                    <span>Task Board</span>
+                </a>
+                <a href="{% url 'team_list' %}" class="nav-item {% if 'team' in request.path %}active{% endif %}">
+                    <i data-lucide="users"></i>
+                    <span>Network</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-card">
+                    <div class="avatar">{{ user.first_name|make_list|first|default:user.username|make_list|first|upper }}</div>
+                    <div class="user-info">
+                        <p class="name">{{ user.get_full_name|default:user.username }}</p>
+                        <p class="role">{{ user.get_role_display }}</p>
+                    </div>
+                </div>
+                <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-logout">
+                        <i data-lucide="log-out"></i> Sign Out
+                    </button>
+                </form>
+            </div>
+        </aside>
+        
+        <main class="main-content">
+            <header class="topbar">
+                <h2 class="page-title">{% block page_title %}{% endblock %}</h2>
+                <div class="topbar-actions">
+                    <button class="btn-icon"><i data-lucide="bell"></i></button>
+                    <div class="avatar-small">{{ user.first_name|make_list|first|default:user.username|make_list|first|upper }}</div>
+                </div>
+            </header>
+            
+            <div class="content-wrapper">
+                {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                    <div class="toast {{ message.tags }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+    {% else %}
+        {% block auth_content %}{% endblock %}
+    {% endif %}
+
+    <script src="/static/js/app.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

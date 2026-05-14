@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
+    <div>
+        <h1 style="font-size: 1.875rem; font-weight: 700; margin-bottom: 0.5rem;">Welcome back, {{ user.first_name|default:user.username }} 👋</h1>
+        <p style="color: var(--text-secondary);">You have <strong style="color: var(--primary);">{{ in_progress_tasks }} tasks</strong> in progress today.</p>
+    </div>
+    <a href="{% url 'task_list' %}" class="btn-primary">
+        <i data-lucide="plus"></i> New Task
+    </a>
+</div>
+
+<div class="grid-4">
+    <div class="card stat-card">
+        <div class="stat-header">
+            <div class="stat-icon stat-total"><i data-lucide="bar-chart-2"></i></div>
+        </div>
+        <div class="stat-value">{{ total_tasks }}</div>
+        <div class="stat-label">TOTAL TASKS</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-header">
+            <div class="stat-icon stat-completed"><i data-lucide="check-circle"></i></div>
+        </div>
+        <div class="stat-value">{{ completed_tasks }}</div>
+        <div class="stat-label">COMPLETED</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-header">
+            <div class="stat-icon stat-progress"><i data-lucide="clock"></i></div>
+        </div>
+        <div class="stat-value">{{ in_progress_tasks }}</div>
+        <div class="stat-label">IN PROGRESS</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-header">
+            <div class="stat-icon stat-overdue"><i data-lucide="alert-triangle"></i></div>
+        </div>
+        <div class="stat-value">{{ overdue_tasks }}</div>
+        <div class="stat-label">OVERDUE</div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <!-- Active Projects -->
+    <div class="card">
+        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1.5rem;">Active Projects</h3>
+        <div class="project-list">
+            {% for project in active_projects %}
+            <div class="project-item">
+                <div class="project-icon" style="background-color: {{ project.color }};">
+                    {{ project.name|make_list|first|upper }}
+                </div>
+                <div class="project-details">
+                    <h4>{{ project.name }}</h4>
+                    <div class="project-meta">
+                        {{ project.completed_project_tasks }} / {{ project.total_project_tasks }} Tasks Completed
+                    </div>
+                    <div class="progress-bg">
+                        <div class="progress-fill" style="width: {% if project.total_project_tasks > 0 %}{% widthratio project.completed_project_tasks project.total_project_tasks 100 %}{% else %}0{% endif %}%; background-color: {{ project.color }};"></div>
+                    </div>
+                </div>
+                <a href="{% url 'project_board' project.id %}" class="btn-icon" style="padding: 0.5rem;"><i data-lucide="arrow-right"></i></a>
+            </div>
+            {% empty %}
+            <p style="color: var(--text-secondary); text-align: center; padding: 2rem 0;">No active projects.</p>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Efficiency Insights -->
+    <div class="card">
+        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1.5rem;">Efficiency Insights</h3>
+        <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 2rem;">Task distribution across your workspace</p>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.875rem; font-weight: 500;">
+                <span>To Do</span>
+                <span>{{ todo_tasks }} Tasks</span>
+            </div>
+            <div class="progress-bg"><div class="progress-fill" style="width: {% if total_tasks > 0 %}{% widthratio todo_tasks total_tasks 100 %}{% else %}0{% endif %}%; background-color: #9ca3af;"></div></div>
+        </div>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.875rem; font-weight: 500;">
+                <span>In Progress</span>
+                <span>{{ in_progress_tasks }} Tasks</span>
+            </div>
+            <div class="progress-bg"><div class="progress-fill" style="width: {% if total_tasks > 0 %}{% widthratio in_progress_tasks total_tasks 100 %}{% else %}0{% endif %}%; background-color: #f59e0b;"></div></div>
+        </div>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.875rem; font-weight: 500;">
+                <span>Completed</span>
+                <span>{{ completed_tasks }} Tasks</span>
+            </div>
+            <div class="progress-bg"><div class="progress-fill" style="width: {% if total_tasks > 0 %}{% widthratio completed_tasks total_tasks 100 %}{% else %}0{% endif %}%; background-color: #10b981;"></div></div>
+        </div>
+    </div>
+</div>
+{% endblock %}

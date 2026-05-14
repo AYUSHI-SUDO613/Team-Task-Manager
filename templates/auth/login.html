@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Team Task Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="auth-layout">
+        <div class="auth-panel">
+            <h1 style="font-size: 3rem; margin-bottom: 1rem; font-weight: 700;">TTM</h1>
+            <p style="font-size: 1.25rem; opacity: 0.9; max-width: 400px; text-align: center;">Enterprise-grade task management for modern teams. 10x your productivity today.</p>
+        </div>
+        <div class="auth-form-container">
+            <div class="auth-form">
+                <h2>Welcome Back</h2>
+                <p>Please enter your details to sign in.</p>
+                
+                {% if messages %}
+                    {% for message in messages %}
+                        <div style="padding: 1rem; background-color: #fee2e2; color: #dc2626; border-radius: 8px; margin-bottom: 1rem; font-size: 0.875rem;">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" name="email" class="form-control" required placeholder="Enter your email">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 2rem;">
+                        <label>Password</label>
+                        <input type="password" name="password" class="form-control" required placeholder="Enter your password">
+                    </div>
+                    <button type="submit" class="btn-primary btn-block">Sign In</button>
+                </form>
+                
+                <p style="text-align: center; margin-top: 2rem; color: var(--text-secondary);">
+                    Don't have an account? <a href="{% url 'register' %}" style="color: var(--primary); font-weight: 500;">Sign up</a>
+                </p>
+                
+                <div style="margin-top: 3rem; padding: 1.5rem; background-color: #f9f9fb; border-radius: 8px; border: 1px dashed var(--border-color); font-size: 0.875rem;">
+                    <strong style="display: block; margin-bottom: 0.5rem; color: var(--text-primary);">Demo Credentials:</strong>
+                    <div style="color: var(--text-secondary); margin-bottom: 0.25rem;">Admin: admin@taskflow.com / admin123</div>
+                    <div style="color: var(--text-secondary);">Member: sarah@taskflow.com / password123</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

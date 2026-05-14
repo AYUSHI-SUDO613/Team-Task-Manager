@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Team Network{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
+    <div>
+        <h1 style="font-size: 1.875rem; font-weight: 700; margin-bottom: 0.5rem;">Team Directory</h1>
+        <p style="color: var(--text-secondary);">Manage people in your workspace</p>
+    </div>
+</div>
+
+<div class="grid-4">
+    {% for member in members %}
+    <div class="card" style="text-align: center; padding: 2rem;">
+        <div class="avatar" style="width: 64px; height: 64px; font-size: 1.5rem; margin: 0 auto 1rem;">
+            {{ member.first_name|make_list|first|default:member.username|make_list|first|upper }}
+        </div>
+        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.25rem;">{{ member.get_full_name|default:member.username }}</h3>
+        <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1rem;">{{ member.email }}</p>
+        
+        <div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.75rem; background: {% if member.role == 'admin' %}#fef3c7{% else %}#f3f4f6{% endif %}; color: {% if member.role == 'admin' %}#d97706{% else %}#4b5563{% endif %}; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; margin-bottom: 1.5rem;">
+            <i data-lucide="{% if member.role == 'admin' %}shield{% else %}user{% endif %}" style="width: 14px;"></i>
+            {{ member.get_role_display|upper }}
+        </div>
+        
+        {% if user.role == 'admin' and user != member %}
+        <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; display: flex; justify-content: center; gap: 1rem;">
+            <form action="{% url 'team_update_role' member.id %}" method="POST" style="margin: 0;">
+                {% csrf_token %}
+                <input type="hidden" name="role" value="{% if member.role == 'admin' %}member{% else %}admin{% endif %}">
+                <button type="submit" class="btn-icon" style="color: var(--text-secondary);" title="Toggle Role"><i data-lucide="refresh-cw" style="width: 18px;"></i></button>
+            </form>
+            <form action="{% url 'team_delete' member.id %}" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to remove this user?');">
+                {% csrf_token %}
+                <button type="submit" class="btn-icon" style="color: #ef4444;" title="Remove User"><i data-lucide="trash-2" style="width: 18px;"></i></button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
